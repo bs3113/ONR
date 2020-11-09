@@ -1,15 +1,16 @@
 import tkinter as tk
-from simulated_output import Clip
+from tb6600 import stepper
 from read import read
 import time
 
 class Application(tk.Frame):
-    def __init__(self, master=None, path = ""):
+    def __init__(self, master=None, path = "", pin= [0,0,0]):
         super().__init__(master)
         self.master = master
         self.pack()
         self.power, self.layer, self.time = read(path)
         self.create_widgets()
+        self.pin = pin
 
 
     def create_widgets(self):
@@ -84,16 +85,32 @@ class Application(tk.Frame):
         self.speed_label.set("Speed (mm/s) {}".format(self.layer / self.time))
 
     def run_main(self):
-        job = Clip(motor_speed = 20)
-        job.init()
-        time.sleep(10)
-        job.fab(self.time, self.layer)
+        #hyperparameters
+        regular_speed = 8.3
+        vertical_range = 110
+        layer_n = 3000
+        motor_stepsize = 3200
+        stepsize = motor_stepsize*self.layer/vertical_range*layer_n
+        
+        run = stepper(self.pin)
+        if self.time:
+            fab_speed = self.layer / self.time
+        else:
+            raise Exception("Time& layer thickness must be positive value")
+        print("start")
+        for i in range(55):
+            run.step(int(stepsize), "right", speed = fab_speed/regular_speed)
+        time.sleep(5)
+        print("resetting")
+        for i in range(55):
+            run.step(int(stepsize), "left", speed = 3)
+        print("all done")
+        run.cleanGPIO()
 
-
-
+pins = [17, 27, 22]
 path = "input"
 root = tk.Tk()
-app = Application(master=root, path = path)
+app = Application(master=root, path = path, pin = pins)
 app.master.title("Control Interface")
 app.master.maxsize(800, 500)
 app.mainloop()
