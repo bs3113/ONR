@@ -1,19 +1,22 @@
 import tkinter as tk
 from simulated_output import Clip
 from read import read
+import time
 
 class Application(tk.Frame):
     def __init__(self, master=None, path = ""):
         super().__init__(master)
         self.master = master
         self.pack()
-        self.power, self.thickness, self.time = read(path)
+        self.power, self.layer, self.time = read(path)
         self.create_widgets()
 
 
     def create_widgets(self):
         self.title = tk.Label(self, text="Motor control interface v0")
         self.name = tk.Label(self, text="by Boyuan Sun")
+        self.title.pack(side = "top")
+        self.name.pack(side = "top")
 
         self.time_up = tk.Button(self)
         self.time_up["text"] = "time up"
@@ -24,6 +27,11 @@ class Application(tk.Frame):
         self.time_down["command"] = self.time_down_f
         self.time_down.pack(side="top")
         self.time_label = tk.StringVar()
+        self.time_label.set("Exposure Time {}".format(self.time))
+        self.entrythingy = tk.Entry()
+        self.entrythingy.pack()
+        self.entrythingy["textvariable"] = self.time_label
+        # self.entrythingy.bind('<Key-Return>',self.print_contents)
 
         self.layer_up = tk.Button(self)
         self.layer_down = tk.Button(self)
@@ -34,6 +42,22 @@ class Application(tk.Frame):
         self.layer_up.pack(side="top")
         self.layer_down.pack(side="top")
         self.layer_label = tk.StringVar()
+        self.layer_label.set("Layer Thickness {}".format(self.layer))
+        self.entrythingy2 = tk.Entry()
+        self.entrythingy2.pack()
+        self.entrythingy2["textvariable"] = self.layer_label
+        # self.entrythingy2.bind('<Key-Return>',self.print_contents2)
+
+        self.speed_label = tk.StringVar()
+        self.speed_label.set("Speed (mm/s) {}".format(self.layer/self.time))
+        self.entrythingy2 = tk.Entry()
+        self.entrythingy2.pack()
+        self.entrythingy2["textvariable"] = self.speed_label
+
+        self.run = tk.Button(self)
+        self.run["text"] = "Run fab"
+        self.run["command"] = self.run_main
+        self.run.pack(side="top")
 
         self.quit = tk.Button(self, text="QUIT", fg="red",
                               command=self.master.destroy)
@@ -41,22 +65,35 @@ class Application(tk.Frame):
 
     def time_up_f(self):
         self.time += 0.025
-        self.time_label = tk.Label(self, text="Exposure Time is {} (s)".format(self.time))
-
+        self.time_label.set("Exposure Time {}".format(self.time))
+        self.speed_label.set("Speed (mm/s) {}".format(self.layer / self.time))
+    #
     def time_down_f(self):
         self.time -= 0.025
-        self.time_label = tk.Label(self, text="Exposure Time is {} (s)".format(self.time))
-
+        self.time_label.set("Exposure Time {}".format(self.time))
+        self.speed_label.set("Speed (mm/s) {}".format(self.layer / self.time))
+    #
     def layer_up_f(self):
         self.layer += 0.001
-        self.layer_label = tk.Label(self, text="Layer thickness is {} (mm)".format(self.time))
-
+        self.layer_label.set("Layer Thickness {}".format(self.layer))
+        self.speed_label.set("Speed (mm/s) {}".format(self.layer / self.time))
+    #
     def layer_down_f(self):
         self.layer -= 0.001
-        self.layer_label = tk.Label(self, text="Layer thickness is {} (mm)".format(self.time))
+        self.layer_label.set("Layer Thickness {}".format(self.layer))
+        self.speed_label.set("Speed (mm/s) {}".format(self.layer / self.time))
+
+    def run_main(self):
+        job = Clip(motor_speed = 20)
+        job.init()
+        time.sleep(10)
+        job.fab(self.time, self.layer)
+
 
 
 path = "input"
 root = tk.Tk()
 app = Application(master=root, path = path)
+app.master.title("Control Interface")
+app.master.maxsize(800, 500)
 app.mainloop()

@@ -5,7 +5,7 @@
 # kit = MotorKit(i2c=board.I2C())
 #
 # kit.stepper1.release()
-import time
+import time as time2
 
 def single():
     while True:
@@ -48,7 +48,7 @@ class Clip():
     def init(self):
         print("set speed to 10")
         print("initialing")
-        time.sleep(8)
+        time2.sleep(8)
         print("Done")
 
     def fab(self, time = 30, layer = 100):
@@ -58,7 +58,9 @@ class Clip():
         else:
             Exception("Exposure time or layer thickness is not valid!")
 
-        for _ in range(100):
-            time.sleep(1/self.motor_speed)
         print("Fabrication")
+        for _ in range(100):
+            time2.sleep(0.00001/self.motor_speed)
+        print("All done")
+
 
